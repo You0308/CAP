@@ -1,5 +1,5 @@
 // Service worker : permet d'ouvrir l'app sans connexion.
-var CACHE = "cap-quotidien-v2";
+var CACHE = "cap-quotidien-v3";
 var ASSETS = ["./", "index.html", "manifest.webmanifest", "icon-180.png", "icon-192.png", "icon-512.png"];
 
 self.addEventListener("install", function (e) {

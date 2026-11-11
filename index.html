@@ -17,7 +17,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Nunito:wght@500;600;700&display=swap">
 <style>
-  /* Layout: a friendly daily companion. Greeting and streak on top, level ring, a row of week dots, then soft quest tiles. */
+  /* Layout: a friendly daily companion. Greeting and streak, level ring, week dots, soft quest tiles, then history and backup. */
   :root {
     --bg: #F3F5F9;
     --surface: #FFFFFF;
@@ -32,6 +32,12 @@
     --done: #1C8A5F;
     --done-soft: #E0F3EA;
     --danger: #B3261E;
+    --sky: #2F6FDE;
+    --sky-ink: #1F54B5;
+    --sky-soft: #E4EDFC;
+    --gold: #F0A400;
+    --gold-ink: #7A4F00;
+    --gold-soft: #FFF0C9;
     --display: "Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
     --text: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
     color-scheme: light;
@@ -51,30 +57,40 @@
       --done: #4CC9A0;
       --done-soft: #16322A;
       --danger: #E0554D;
+      --sky: #7FB0FF;
+      --sky-ink: #A5C8FF;
+      --sky-soft: #1B2A44;
+      --gold: #FFC247;
+      --gold-ink: #FFD27A;
+      --gold-soft: #3A2E12;
       color-scheme: dark;
     }
   }
 
   * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html { background: var(--bg); }
   body {
     margin: 0;
     min-height: 100vh;
     background: var(--bg);
     color: var(--fg);
-    font: 500 16px/1.5 var(--text);
+    font: 500 16px/1.55 var(--text);
     -webkit-text-size-adjust: 100%;
-    padding-top: calc(env(safe-area-inset-top, 0px) + 22px);
-    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 56px);
-    padding-left: max(16px, env(safe-area-inset-left, 0px));
-    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-top: calc(env(safe-area-inset-top, 0px) + 28px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 104px);
+    padding-left: max(20px, env(safe-area-inset-left, 0px));
+    padding-right: max(20px, env(safe-area-inset-right, 0px));
   }
-  .wrap { max-width: 560px; margin-inline: auto; display: flex; flex-direction: column; gap: 26px; }
-  button, input, select { font: inherit; color: inherit; touch-action: manipulation; }
+  .wrap { max-width: 560px; margin-inline: auto; display: flex; flex-direction: column; gap: 52px; }
+  button, input, select, textarea { font: inherit; color: inherit; touch-action: manipulation; }
+  button:disabled { opacity: .45; cursor: default; }
   :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+  .tagline { margin: 0 0 -6px; font: 700 13px var(--text); letter-spacing: .06em; text-transform: uppercase; color: var(--accent-ink); }
+
   /* Greeting */
-  .hero { display: flex; flex-direction: column; gap: 18px; }
+  .hero { display: flex; flex-direction: column; gap: 26px; }
   .greet-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
   h1 { margin: 0; font: 800 32px/1.1 var(--display); letter-spacing: -.01em; text-wrap: balance; }
   .date { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
@@ -84,7 +100,7 @@
   .streak.off svg { color: var(--muted); }
 
   /* Level card */
-  .levelcard { display: flex; align-items: center; gap: 18px; padding: 16px 18px; background: var(--surface); border: 1px solid var(--line); border-radius: 22px; }
+  .levelcard { display: flex; align-items: center; gap: 18px; padding: 18px 20px; background: linear-gradient(135deg, var(--accent-soft), var(--surface) 65%); border: 1px solid var(--line); border-radius: 22px; }
   .ring { position: relative; flex: none; width: 84px; height: 84px; }
   .ring svg { display: block; transform: rotate(-90deg); }
   .ring .trk { stroke: var(--track); }
@@ -96,105 +112,449 @@
   .note { margin: 0; font-size: 17px; font-weight: 600; text-wrap: balance; }
 
   /* Week */
-  .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+  .week { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
   .day { display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .dot { position: relative; width: 100%; max-width: 40px; aspect-ratio: 1; border-radius: 50%; display: grid; place-items: center; background: conic-gradient(var(--accent) calc(var(--p) * 1%), var(--track) 0); }
   .dot::after { content: ""; position: absolute; inset: 5px; border-radius: 50%; background: var(--bg); }
   .dot.full { background: var(--done); color: #fff; }
   .dot.full::after { display: none; }
+  .dot.rest { background: transparent; border: 2px dashed var(--muted); color: var(--muted); }
+  .dot.rest::after { display: none; }
   .dot svg { position: relative; z-index: 1; }
   .day-lab { font-size: 13px; font-weight: 700; text-transform: uppercase; color: var(--muted); }
   .day.today .day-lab { color: var(--fg); }
 
-  /* Quests */
-  .section-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+  /* Sections */
+  .section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
   h2 { margin: 0; font: 800 24px/1.15 var(--display); letter-spacing: -.005em; text-wrap: balance; }
-  .meta { margin-top: 2px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .meta { margin-top: 8px; line-height: 1.5; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .link-btn { background: none; border: 0; padding: 8px 0 8px 8px; color: var(--accent-ink); font-weight: 800; cursor: pointer; }
-  ul.quests { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
-  .row { width: 100%; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 14px 16px; min-height: 66px; background: var(--surface); border: 1px solid var(--line); border-radius: 18px; text-align: left; cursor: pointer; }
-  .row.edit { cursor: default; grid-template-columns: minmax(0, 1fr) auto auto; }
+
+  /* Streak goal */
+  .goal { margin-top: 18px; padding: 18px 20px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .goal-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-weight: 800; }
+  .goal-top span:last-child { font-variant-numeric: tabular-nums; color: var(--accent-ink); }
+  .bar { height: 10px; border-radius: 999px; background: var(--track); overflow: hidden; }
+  .bar i { display: block; height: 100%; background: var(--accent); border-radius: 999px; transition: width .4s ease; }
+  .goal.met .bar i { background: var(--done); }
+  .goal.met .goal-top span:last-child { color: var(--done); }
+  .goal-hint { font-size: 13px; color: var(--muted); }
+  .goal-edit { display: flex; align-items: center; gap: 10px; }
+
+  /* Settings */
+  .settings { margin-top: 18px; padding: 22px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .set-top { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .tier { padding: 6px 14px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font: 800 20px var(--display); }
+  .set-val { font: 800 30px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .set-txt { margin: 0; font-size: 17px; font-weight: 600; text-wrap: balance; }
+  .set-need { margin: 0; padding: 10px 14px; border-radius: 14px; background: var(--bg); font-weight: 700; font-size: 15px; }
+  .set-scale { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .settings .field-label { margin: 6px 0 0; }
+  input[type="range"] { width: 100%; accent-color: var(--accent); height: 36px; margin: 0; }
+
+  /* Timer and rest */
+  .timer { margin-top: 14px; padding: 16px; border-radius: 18px; background: var(--accent-soft); color: var(--accent-ink); display: flex; flex-direction: column; gap: 10px; }
+  .timer-top { font-weight: 800; }
+  .timer-time { font: 800 44px/1 var(--display); font-variant-numeric: tabular-nums; }
+  .timer-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ghost { background: transparent; border: 1.5px solid currentColor; color: inherit; border-radius: 14px; padding: 10px 16px; font-weight: 800; cursor: pointer; }
+  .rest { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 14px; color: var(--muted); }
+  .rest.on { padding: 14px 16px; border-radius: 18px; background: var(--track); color: var(--fg); font-size: 15px; font-weight: 700; }
+
+  /* Quests */
+  ul.quests { list-style: none; margin: 20px 0 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+  .tile { background: var(--surface); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; }
+  .tile.done { background: var(--done-soft); border-color: transparent; }
+  .main { width: 100%; display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 18px 18px; min-height: 76px; background: none; border: 0; text-align: left; cursor: pointer; }
   .box { width: 30px; height: 30px; border: 2px solid var(--muted); border-radius: 50%; display: grid; place-items: center; color: transparent; transition: background .15s ease, border-color .15s ease; }
   .name { overflow-wrap: anywhere; font-weight: 700; }
+  .name small { display: block; font-weight: 600; font-size: 13px; color: var(--muted); }
   .xp { padding: 4px 10px; border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink); font: 800 13px var(--text); white-space: nowrap; font-variant-numeric: tabular-nums; }
-  .row.done { background: var(--done-soft); border-color: transparent; }
-  .row.done .box { background: var(--done); border-color: var(--done); color: #fff; }
-  .row.done .name { color: var(--muted); }
-  .row.done .xp { background: transparent; color: var(--done); }
-  .row.just .box { animation: pop .3s ease; }
+  .tile.done .box { background: var(--done); border-color: var(--done); color: #fff; }
+  .tile.done .name { color: var(--muted); }
+  .tile.done .xp { background: transparent; color: var(--done); }
+  .tile.just .box { animation: pop .3s ease; }
   @keyframes pop { 0% { transform: scale(1); } 50% { transform: scale(1.22); } 100% { transform: scale(1); } }
+  .sub { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; padding: 0 16px 14px 60px; }
+  .chip-btn { border: 1px solid var(--line); background: var(--bg); border-radius: 999px; padding: 7px 13px; font-size: 13px; font-weight: 800; cursor: pointer; }
+  .chip-btn[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+  .tile.done .chip-btn { background: var(--surface); }
+  .tile.done .chip-btn[aria-pressed="true"] { background: var(--accent); }
+  .edit-top { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 10px; padding: 14px 16px 10px; }
+  .days { display: flex; flex-wrap: wrap; gap: 6px; }
+  .tile .days { padding: 0 16px 14px; }
+  .dchip { width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: var(--bg); font-weight: 800; font-size: 13px; cursor: pointer; }
+  .dchip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
   .remove { background: none; border: 1px solid var(--line); border-radius: 999px; padding: 8px 14px; cursor: pointer; font-size: 14px; font-weight: 700; }
   .remove.confirm { background: var(--danger); border-color: var(--danger); color: #fff; }
   .bonus { margin-top: 12px; padding: 14px 16px; border-radius: 18px; background: var(--done-soft); color: var(--done); font-weight: 800; }
   .empty { padding: 20px 4px; color: var(--muted); }
 
-  .editor { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
-  .editor input[type="text"] { flex: 1 1 200px; min-width: 0; }
-  .editor input, .editor select { padding: 13px 14px; font-size: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .editor { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
+  .editor input[type="text"] { flex: 1 1 100%; min-width: 0; }
+  .editor input, .editor select, .backup textarea { padding: 13px 14px; font-size: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+  .editor input[type="number"] { width: 130px; }
+  .field-label { flex: 1 1 100%; margin-top: 4px; font-size: 14px; font-weight: 700; color: var(--muted); }
+  .editor .days { flex: 1 1 100%; }
   .primary { background: var(--accent); color: var(--on-accent); border: 0; border-radius: 14px; padding: 13px 20px; font-weight: 800; cursor: pointer; }
+
+  .xp-edit { padding: 8px 10px; font-size: 14px; font-weight: 800; background: var(--accent-soft); color: var(--accent-ink); border: 0; border-radius: 999px; }
+  .card textarea { width: 100%; padding: 13px 14px; font-size: 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 14px; resize: vertical; font-family: inherit; }
+  .note-item { margin: 0; font-size: 15px; }
+  .note-item b { font-size: 13px; color: var(--muted); text-transform: capitalize; }
+
+  .intro { margin: 0; padding: 4px 0 4px 14px; border-left: 4px solid var(--accent); color: var(--muted); font-size: 15px; text-wrap: pretty; }
+
+  .name-edit { min-width: 0; padding: 10px 12px; font-size: 16px; font-weight: 700; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; }
+  .edit-timer { display: flex; align-items: center; gap: 10px; padding: 0 16px 10px; font-size: 14px; font-weight: 700; color: var(--muted); }
+  .edit-timer input { width: 110px; padding: 8px 10px; font-size: 16px; background: var(--bg); border: 1px solid var(--line); border-radius: 12px; }
+
+  a.primary { display: inline-block; text-decoration: none; text-align: center; }
+
+  .share-top { align-self: flex-start; padding: 0; margin-top: -14px; }
+
+  /* Welcome screen */
+  .welcome { position: fixed; inset: 0; z-index: 50; background: var(--bg); overflow-y: auto; display: flex; padding: calc(env(safe-area-inset-top, 0px) + 28px) max(24px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 28px) max(24px, env(safe-area-inset-left, 0px)); }
+  .welcome-in { margin: auto; width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 30px; }
+  .welcome-logo { width: 88px; height: 88px; border-radius: 26px; box-shadow: 0 10px 24px rgba(240, 80, 26, .28); }
+  .welcome-logo svg { display: block; }
+  .welcome-title { margin: 0; font: 800 36px/1.08 var(--display); letter-spacing: -.01em; text-wrap: balance; }
+  .welcome-lead { margin: 10px 0 0; font-size: 18px; font-weight: 600; color: var(--muted); text-wrap: balance; }
+  .welcome-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 20px; }
+  .welcome-list li { display: flex; gap: 16px; align-items: flex-start; }
+  .welcome-list b { display: block; font: 800 18px/1.25 var(--display); }
+  .welcome-list span:not(.wn) { display: block; margin-top: 2px; color: var(--muted); font-size: 15px; }
+  .wn { flex: none; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; font: 800 16px var(--display); }
+  .wn.n1 { background: var(--accent-soft); color: var(--accent-ink); }
+  .wn.n2 { background: var(--sky-soft); color: var(--sky-ink); }
+  .wn.n3 { background: var(--gold-soft); color: var(--gold-ink); }
+  .welcome-act { display: flex; flex-direction: column; gap: 12px; }
+  .welcome-act .goal-hint { text-align: center; }
+  .primary.big { width: 100%; padding: 17px 20px; font-size: 18px; border-radius: 18px; }
+
+  /* Tabs */
+  .pane { display: flex; flex-direction: column; gap: 52px; }
+  .tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; padding: 8px max(8px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 8px) max(8px, env(safe-area-inset-left, 0px)); background: var(--surface); border-top: 1px solid var(--line); }
+  .tab { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 54px; padding: 6px 2px; border: 0; background: none; border-radius: 14px; color: var(--muted); font-weight: 800; font-size: 12px; cursor: pointer; }
+  .tab[aria-current="page"] { color: var(--accent-ink); background: var(--accent-soft); }
+
+  /* Cards, reasons, rewards, badges */
+  .card { margin-top: 20px; padding: 22px; border-radius: 22px; background: var(--surface); border: 1px solid var(--line); display: flex; flex-direction: column; gap: 16px; }
+  .card p { margin: 0; }
+  .card-title, .why-title { margin: 0; font: 800 20px/1.2 var(--display); text-wrap: balance; }
+  .why .card, .card.why { background: var(--accent-soft); border-color: transparent; }
+  .why p { color: var(--fg); }
+  .reasons { display: flex; flex-wrap: wrap; gap: 8px; }
+  .why input[type="text"] { padding: 13px 14px; font-size: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; width: 100%; }
+  .why-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chip-btn.static { cursor: default; }
+  .rw { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 16px; border-radius: 18px; background: var(--surface); border: 1px solid var(--line); }
+  .rw.open { background: var(--accent-soft); border-color: transparent; }
+  .rw.locked { color: var(--muted); }
+  .rw .name { flex: 1 1 140px; min-width: 0; }
+  .rw-lv { flex: none; padding: 4px 10px; border-radius: 999px; background: var(--track); font: 800 13px var(--text); color: var(--fg); }
+  .rw.open .rw-lv { background: var(--accent); color: var(--on-accent); }
+  .rw-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badges { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+  .badge { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); min-width: 0; }
+  .badge .ic { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); }
+  .badge b { display: block; font-weight: 800; font-size: 15px; line-height: 1.2; }
+  .badge span:not(.ic) { display: block; font-size: 12px; color: var(--muted); line-height: 1.3; }
+  .badge.locked { opacity: .65; }
+  .badge.locked .ic { background: var(--track); color: var(--muted); }
+
+  /* History */
+  .month-nav { display: flex; align-items: center; gap: 8px; }
+  .month-title { min-width: 120px; text-align: center; font-weight: 800; text-transform: capitalize; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); font-size: 18px; font-weight: 800; cursor: pointer; }
+  .stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 20px; }
+  .stat { padding: 12px; border-radius: 16px; background: var(--surface); border: 1px solid var(--line); }
+  .stat b { display: block; font: 800 26px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+  .stat span { font-size: 12px; color: var(--muted); }
+  .cal { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; margin-top: 14px; }
+  .cal .h { text-align: center; font-size: 12px; font-weight: 700; color: var(--muted); }
+  .cd { aspect-ratio: 1; border-radius: 10px; display: grid; place-items: center; font-size: 13px; font-weight: 700; border: 1px solid var(--line); color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cd.empty { border: 0; }
+  .cd.none { opacity: .55; }
+  .cd.done { background: var(--done); border-color: var(--done); color: #fff; }
+  .cd.part { background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
+  .cd.missed { background: var(--track); border-color: transparent; }
+  .cd.rest { border: 1.5px dashed var(--muted); }
+  .cd.future { opacity: .4; }
+  .cd.today { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .legend { margin-top: 10px; font-size: 13px; color: var(--muted); }
+
+  /* Backup */
+  .backup summary { font: 800 20px var(--display); cursor: pointer; padding: 6px 0; }
+  .backup p { margin: 8px 0 12px; color: var(--muted); font-size: 14px; }
+  .backup textarea { width: 100%; min-height: 110px; font-size: 13px; font-family: ui-monospace, Menlo, monospace; resize: vertical; }
+  .backup-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
 
   .status { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 
-  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 22px); transform: translate(-50%, 12px); max-width: calc(100% - 32px); padding: 11px 18px; border-radius: 999px; background: var(--fg); color: var(--bg); font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; }
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 88px); transform: translate(-50%, 12px); max-width: calc(100% - 32px); padding: 11px 18px; border-radius: 999px; background: var(--fg); color: var(--bg); font-weight: 700; opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease; text-align: center; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* Touches of colour per section */
+  .pane[data-pane="week"] { --pc: var(--sky); }
+  .pane[data-pane="trophy"] { --pc: var(--gold); }
+  .pane[data-pane="settings"] { --pc: var(--done); }
+  .section-head h2::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 10px; border-radius: 50%; background: var(--pc, var(--accent)); vertical-align: middle; position: relative; top: -2px; }
+  .pane[data-pane="week"] .goal:not(.met) .bar i { background: var(--sky); }
+  .pane[data-pane="week"] .goal:not(.met) .goal-top span:last-child { color: var(--sky-ink); }
+  .stat { background: var(--sky-soft); border-color: transparent; }
+  .stat b { color: var(--sky-ink); }
+  .badge:not(.locked) { background: var(--gold-soft); border-color: transparent; }
+  .badge:not(.locked) .ic { background: var(--gold); color: #3A2600; }
+  .rw.open { background: var(--gold-soft); }
+  .rw.open .rw-lv { background: var(--gold); color: #3A2600; }
+  .cap { margin-top: 14px; }
 
   @media (prefers-reduced-motion: reduce) {
     .ring .prg, .box, .toast { transition: none; }
-    .row.just .box { animation: none; }
+    .tile.just .box { animation: none; }
   }
 </style>
 </head>
 <body>
+<div class="welcome" id="welcome" role="dialog" aria-modal="true" aria-labelledby="welcome-title" hidden>
+  <div class="welcome-in">
+    <div class="welcome-logo" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="88" height="88"><defs>  <linearGradient id="wlBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF9B5E"/><stop offset="1" stop-color="#F0501A"/></linearGradient>  <radialGradient id="wlGlow" cx="0.25" cy="0.15" r="0.9"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="512" height="512" rx="116" fill="url(#wlBg)"/><rect width="512" height="512" rx="116" fill="url(#wlGlow)"/><circle cx="256" cy="262" r="150" fill="none" stroke="#fff" stroke-opacity=".95" stroke-width="34" stroke-linecap="round" stroke-dasharray="735 208" transform="rotate(-5 256 262)"/><path d="M186 268 L238 320 L352 172" fill="none" stroke="#7A2200" stroke-opacity=".22" stroke-width="44" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 8)"/><path d="M186 268 L238 320 L352 172" fill="none" stroke="#fff" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/><path d="M392 96 Q392 126 422 126 Q392 126 392 156 Q392 126 362 126 Q392 126 392 96Z" fill="#FFD166" stroke="#FFD166" stroke-width="14" stroke-linejoin="round"/></svg></div>
+    <div>
+      <h1 id="welcome-title" class="welcome-title">Bienvenue sur Cap Quotidien</h1>
+      <p class="welcome-lead">Une app pour construire ta discipline, un jour à la fois.</p>
+    </div>
+    <ol class="welcome-list">
+      <li><span class="wn n1">1</span><div><b>Chaque jour, des quêtes</b><span>Sport, lecture, apprentissage… Tu les valides une par une.</span></div></li>
+      <li><span class="wn n2">2</span><div><b>Des XP pour avancer</b><span>Atteins ton objectif d’XP du jour pour sauver ta série et monter de niveau.</span></div></li>
+      <li><span class="wn n3">3</span><div><b>Un cap, pas la perfection</b><span>Un jour raté n’efface pas tout. Tu reviens, tu ajustes, tu continues.</span></div></li>
+    </ol>
+    <div class="welcome-act">
+      <button type="button" class="primary big" id="welcome-go">Continuer</button>
+      <p class="goal-hint">Tes données restent sur ton téléphone.</p>
+    </div>
+  </div>
+</div>
 <main class="wrap">
+  <div class="pane" data-pane="today">
   <section class="hero" id="hero" aria-label="Ton résumé du jour"></section>
+
+  <p class="intro">Cap Quotidien, c’est ton cap : chaque jour, atteins ton objectif d’XP pour garder ta série, monte de niveau et gagne tes récompenses.</p>
+  <button type="button" class="link-btn share-top" id="share-top">Partager l’app avec quelqu’un</button>
 
   <section aria-label="Les 7 derniers jours">
     <div class="week" id="week"></div>
+    <p class="meta cap">Tes 7 derniers jours. Vert : objectif atteint. Cercle orange : journée en cours ou partielle.</p>
   </section>
+
+  <section id="why" aria-label="Bilan d’un jour raté" hidden></section>
 
   <section>
     <div class="section-head">
       <h2>Tes quêtes du jour</h2>
       <button class="link-btn" id="edit-toggle" type="button" aria-pressed="false">Modifier</button>
     </div>
+    <p class="meta">Touche une quête pour la valider. Chaque quête rapporte des XP, et les XP te font monter de niveau.</p>
     <div class="meta" id="list-meta"></div>
+    <div id="goal"></div>
+    <div id="timer"></div>
+    <div id="rest"></div>
     <ul class="quests" id="list"></ul>
     <div id="bonus"></div>
     <form class="editor" id="editor" hidden>
       <input type="text" id="quest-name" maxlength="60" placeholder="Nouvelle quête, par ex. Marcher : 20 min minimum" aria-label="Nom de la quête" required>
       <select id="quest-xp" aria-label="XP de la quête">
+        <option value="5">5 XP</option>
         <option value="10">10 XP</option>
+        <option value="15">15 XP</option>
         <option value="20" selected>20 XP</option>
+        <option value="25">25 XP</option>
         <option value="30">30 XP</option>
         <option value="40">40 XP</option>
+        <option value="50">50 XP</option>
       </select>
+      <input type="number" id="quest-timer" inputmode="numeric" min="1" max="180" placeholder="Chrono (min)" aria-label="Durée du chrono en minutes, facultatif">
+      <div class="field-label">Jours de la quête</div>
+      <div class="days" id="new-days" role="group" aria-label="Jours de la quête"></div>
       <button class="primary" type="submit">Ajouter</button>
     </form>
   </section>
 
+  <section aria-label="Ta note du soir">
+    <div class="section-head"><h2>Ta note du soir</h2></div>
+    <div class="card">
+      <p class="goal-hint">Comment s’est passée ta journée ? Ce qui a marché, ce qui a coincé. Deux lignes suffisent.</p>
+      <textarea id="note-text" maxlength="300" rows="3" placeholder="Ce soir, je retiens que…" aria-label="Note du soir"></textarea>
+      <div class="why-actions"><button class="primary" id="note-save" type="button">Enregistrer</button></div>
+    </div>
+  </section>
+  </div>
+
+  <div class="pane" data-pane="week" hidden>
+  <section aria-label="Ta semaine">
+    <div class="section-head"><h2>Ta semaine</h2></div>
+    <p class="meta">Ton défi de la semaine et ton bilan, pour voir où tu en es vraiment.</p>
+    <div id="weekbox"></div>
+  </section>
+
+  <section aria-label="Ton historique">
+    <div class="section-head">
+      <h2>Ton historique</h2>
+      <div class="month-nav">
+        <button class="icon-btn" id="month-prev" type="button" aria-label="Mois précédent">&lsaquo;</button>
+        <span class="month-title" id="month-title"></span>
+        <button class="icon-btn" id="month-next" type="button" aria-label="Mois suivant">&rsaquo;</button>
+      </div>
+    </div>
+    <p class="meta">Chaque case est un jour. Touche les flèches pour changer de mois.</p>
+    <div class="stats" id="stats"></div>
+    <div class="cal" id="cal"></div>
+    <div class="legend">Vert : objectif de série atteint. Orange clair : partielle. Pointillés : repos.</div>
+  </section>
+  </div>
+
+  <div class="pane" data-pane="trophy" hidden>
+  <section aria-label="Tes récompenses">
+    <div class="section-head"><h2>Tes récompenses</h2></div>
+    <p class="meta">Ce que tu t’offres quand tu montes de niveau. Ajoutes-en une, choisis le niveau, elle se débloque toute seule.</p>
+    <ul class="quests" id="rewards"></ul>
+    <form class="editor" id="reward-form">
+      <input type="text" id="rw-text" maxlength="80" placeholder="Ex. Un resto, une sortie, un petit achat" aria-label="Récompense" required>
+      <input type="number" id="rw-level" inputmode="numeric" min="2" max="99" placeholder="Niveau" aria-label="Niveau à atteindre">
+      <button class="primary" type="submit">Ajouter</button>
+    </form>
+  </section>
+
+  <section aria-label="Tes badges">
+    <div class="section-head"><h2>Tes badges</h2><span class="meta" id="badge-count"></span></div>
+    <p class="meta">Ils se débloquent tout seuls quand tu atteins un cap. Les grisés sont à venir.</p>
+    <div class="badges" id="badges"></div>
+  </section>
+  </div>
+
+  <div class="pane" data-pane="settings" hidden>
+  <section aria-label="Paramètres">
+    <div class="section-head"><h2>Paramètres</h2></div>
+    <p class="meta">Règle ton niveau d’exigence. C’est toi qui fixes la barre.</p>
+    <div class="settings">
+      <div class="set-top"><span class="tier" id="goal-tier"></span><b class="set-val" id="goal-val"></b></div>
+      <p class="set-txt" id="goal-txt"></p>
+      <label class="field-label" for="goal-range">XP à atteindre chaque jour pour sauver ta série</label>
+      <input type="range" id="goal-range" min="60" max="90" step="10" value="60">
+      <div class="set-scale"><span>60 XP</span><span id="goal-max"></span></div>
+      <p class="set-need" id="goal-need"></p>
+      <p class="goal-hint">Filet de sécurité : un jour raté divise ta série par deux au lieu de la remettre à zéro.</p>
+      <p class="goal-hint">Le minimum est de 60 XP : en dessous, ce n’est plus de la discipline, c’est de l’échauffement. Les jours déjà passés gardent l’objectif qu’ils avaient.</p>
+    </div>
+  </section>
+
+  <section aria-label="Mode pause">
+    <div class="section-head"><h2>Mode pause</h2></div>
+    <p class="meta">Malade, en déplacement ? Mets ta série en pause de 2 à 7 jours : pas de jour raté, pas de série perdue. Une pause possible tous les 14 jours.</p>
+    <div class="card" id="pause-box"></div>
+  </section>
+
+  <section aria-label="Rappels">
+    <div class="section-head"><h2>Rappels</h2></div>
+    <p class="meta">Pas de notification dans l’app elle-même : les rappels passent par l’app Rappels de ton iPhone, et Claude peut te les créer.</p>
+    <div class="card">
+      <div class="why-actions">
+        <a class="primary" id="remind-link" target="_blank" rel="noopener">Créer mes rappels avec Claude</a>
+        <button type="button" class="ghost" id="remind-copy">Copier le message</button>
+      </div>
+      <p class="goal-hint">Claude te demande tes horaires, puis crée des rappels dans l’app Rappels : matin, mi-journée, soir et export du dimanche. Il faut l’app Claude sur ton iPhone. Si tu partages l’app à quelqu’un, il peut faire pareil de son côté.</p>
+      <div class="why-actions"><button type="button" class="ghost" id="share-btn">Partager l’app en un clic</button></div>
+    </div>
+  </section>
+
+  <details class="backup">
+    <summary>Sauvegarde et restauration</summary>
+    <p>« Exporter » met ta progression en texte : garde-la dans Notes ou envoie-la-toi. Pour restaurer, colle ce texte dans le cadre puis touche « Restaurer ».</p>
+    <textarea id="backup-text" aria-label="Texte de sauvegarde" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off"></textarea>
+    <div class="backup-actions">
+      <button class="primary" id="export-btn" type="button">Exporter</button>
+      <button class="ghost" id="import-btn" type="button">Restaurer</button>
+    </div>
+  </details>
+
+  <button type="button" class="link-btn" id="welcome-again">Revoir l’introduction</button>
+
   <div class="status" id="status" role="status"></div>
+  </div>
 </main>
+<nav class="tabs" id="tabs" aria-label="Sections">
+  <button type="button" class="tab" data-tab="today" aria-current="page"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 11l8-7 8 7v8a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg><span>Aujourd’hui</span></button>
+  <button type="button" class="tab" data-tab="week"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4 10h16M9 3v4M15 3v4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Semaine</span></button>
+  <button type="button" class="tab" data-tab="trophy"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Trophées</span></button>
+  <button type="button" class="tab" data-tab="settings"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="7" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="17" r="2.2" fill="none" stroke="currentColor" stroke-width="2"/></svg><span>Réglages</span></button>
+</nav>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 (function () {
-  var NAME = "Younis";
+  var NAME = "boss";
+  var TAGLINE = "Ta discipline se construit un jour à la fois.";
   var LS = "cap-quotidien-v1";
+  var LS_TIMER = "cap-quotidien-timer-v1";
+  var LS_WELCOME = "cap-quotidien-welcome-v1";
   var BONUS = 20;
+  var GOAL_MIN = 60;
+  var GOAL_MAX_MIN = 150;
+  var TIERS = [
+    { min: 0, name: "Régulier", txt: "Le socle. Tu avances chaque jour sans te cramer." },
+    { min: 70, name: "Sérieux", txt: "Là, ça commence à compter. Ta série aura de la valeur." },
+    { min: 80, name: "Guerrier", txt: "Peu de place pour la flemme. Tu joues pour de vrai." },
+    { min: 90, name: "Légende", txt: "Presque tout, tous les jours. Respect." },
+    { min: 120, name: "Hors norme", txt: "Une exigence que presque personne ne tient. Tu as de quoi la porter ?" }
+  ];
+  var CHALLENGE = 5;
+  var REASONS = [["fatigue", "Fatigue"], ["temps", "Pas le temps"], ["flemme", "Flemme"], ["imprevu", "Imprévu"], ["mood", "Pas dans le mood"], ["autre", "Autre"]];
+  var WHY_REPLY = {
+    fatigue: "Noté. Ton corps compte aussi : ajuste, mais ne lâche pas.",
+    temps: "Noté. Cale tes quêtes tôt dans la journée, avant que ça déborde.",
+    flemme: "Noté, et c’est honnête. Demain, lance juste 5 minutes.",
+    imprevu: "Noté. Ça arrive à tout le monde. Demain, tu repars.",
+    mood: "Noté. La motivation vient en agissant, pas avant.",
+    autre: "Noté. Merci d’être franc avec toi-même."
+  };
+  var STAR = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z" fill="currentColor"/></svg>';
+  var LOCK = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="5" y="11" width="14" height="9" rx="2.5" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
+  var BADGES = [
+    { id: "first", name: "Premier pas", hint: "Atteins ton objectif de série un jour.", test: function (c) { return c.doneDays >= 1; } },
+    { id: "s3", name: "Lancé", hint: "3 jours de série d’affilée.", test: function (c) { return c.best >= 3; } },
+    { id: "s7", name: "Une semaine", hint: "7 jours de série.", test: function (c) { return c.best >= 7; } },
+    { id: "s14", name: "Deux semaines", hint: "14 jours de série.", test: function (c) { return c.best >= 14; } },
+    { id: "s30", name: "Un mois", hint: "30 jours de série.", test: function (c) { return c.best >= 30; } },
+    { id: "full", name: "Sans faute", hint: "Fais toutes tes quêtes en une journée.", test: function (c) { return c.full; } },
+    { id: "wk", name: "Semaine pleine", hint: "Réussis le défi de la semaine.", test: function (c) { return c.weeks >= 1; } },
+    { id: "wk4", name: "Quatre semaines", hint: "Réussis 4 défis de la semaine.", test: function (c) { return c.weeks >= 4; } },
+    { id: "rebound", name: "Rebond", hint: "Atteins ton objectif juste après un jour raté.", test: function (c) { return c.rebound; } },
+    { id: "lucid", name: "Lucide", hint: "Explique 3 jours ratés.", test: function (c) { return c.whys >= 3; } },
+    { id: "l3", name: "Niveau 3", hint: "Atteins le niveau 3.", test: function (c) { return c.level >= 3; } },
+    { id: "l5", name: "Niveau 5", hint: "Atteins le niveau 5.", test: function (c) { return c.level >= 5; } },
+    { id: "l10", name: "Niveau 10", hint: "Atteins le niveau 10.", test: function (c) { return c.level >= 10; } }
+  ];
   var TITLES = ["Recrue", "Apprenti", "Régulier", "Endurant", "Discipliné", "Aguerri", "Vétéran", "Maître"];
   var MESSAGES = [
     "Une seule quête pour commencer. Le reste suivra.",
-    "Pas besoin d'être motivé. Lance-toi, la motivation arrive en route.",
-    "Aujourd'hui compte autant que les autres jours de ta série.",
-    "Commence par la plus facile, histoire de prendre l'élan.",
-    "Faire le minimum, c'est déjà faire. Et souvent tu iras plus loin.",
-    "Ce n'est pas la perfection qui te change, c'est la répétition.",
-    "Tu t'es fixé un cap. Tiens-le, même un peu."
+    "Pas besoin d’être motivé. Lance-toi, la motivation arrive en route.",
+    "Aujourd’hui compte autant que les autres jours de ta série.",
+    "Commence par la plus facile, histoire de prendre l’élan.",
+    "Faire le minimum, c’est déjà faire. Et souvent tu iras plus loin.",
+    "Ce n’est pas la perfection qui te change, c’est la répétition.",
+    "Tu t’es fixé un cap. Tiens-le, même un peu."
   ];
   var CHEERS = ["Bien joué.", "Une de plus.", "Tu avances.", "Solide.", "Continue comme ça."];
   var OLD = { sport: "Sport 30 minutes", lecture: "Lire 20 minutes", code: "Coder 30 minutes", eau: "Boire 2 L d'eau", plan: "Planifier la journée (5 min)", ecrans: "Éteindre les écrans avant 23 h" };
-  var NEW = { sport: "Sport : 30 min minimum", lecture: "Lecture : 20 min minimum", code: "Code : 30 min minimum", eau: "Eau : 2 L minimum", plan: "Planifier ma journée : 5 min minimum" };
+  var NEW = { sport: "Sport : 30 min minimum", lecture: "Lecture : 20 min minimum", code: "Apprentissage d'une compétence : 30 min minimum", eau: "Eau : 2 L minimum", plan: "Planifier ma journée : 5 min minimum" };
+  var QMIG = { lecture: [20, 25], code: [20, 25], eau: [10, 5], plan: [10, 5] };
+  var CODE_V2 = "Code : 30 min minimum";
+  var DEFTIMER = { sport: 30, lecture: 20, code: 30, plan: 5 };
+  var WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
+  var DAY_LET = { 1: "L", 2: "M", 3: "M", 4: "J", 5: "V", 6: "S", 0: "D" };
+  var DAY_NAME = { 1: "lundi", 2: "mardi", 3: "mercredi", 4: "jeudi", 5: "vendredi", 6: "samedi", 0: "dimanche" };
   var CHECK = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var DASH = '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M4 8h8" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
   var FLAME = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 2c1 3.5 5 5.5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4.2.2 1.4 1 2.2 2 2.4C10.6 7.6 10.8 4.6 12 2z" fill="currentColor"/></svg>';
 
   function $(s) { return document.querySelector(s); }
@@ -202,6 +562,8 @@
   function key(d) {
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
+  function parseKey(k) { var p = k.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(k, n) { var d = parseKey(k); d.setDate(d.getDate() + n); return key(d); }
 
   var today = key(new Date());
   var state = null;
@@ -211,19 +573,33 @@
   var popId = null;
   var saveFailed = false;
   var toastTimer = null;
+  var importArmed = false;
+  var newDays = [0, 1, 2, 3, 4, 5, 6];
+  var viewMonth = { y: new Date().getFullYear(), m: new Date().getMonth() };
+  var PAUSE_MAX = 7, PAUSE_GAP = 14, pauseDays = 3;
+  var whyPick = null;
+  var whyNote = "";
+  var confirmRw = null;
+  var timer = null;
+  var audioCtx = null;
+  var wake = null;
 
+  /* Data */
   function defaultQuests() {
     return [
-      { id: "sport", name: NEW.sport, xp: 30 },
-      { id: "lecture", name: NEW.lecture, xp: 20 },
-      { id: "code", name: NEW.code, xp: 20 },
-      { id: "eau", name: NEW.eau, xp: 10 },
-      { id: "plan", name: NEW.plan, xp: 10 }
+      { id: "sport", name: NEW.sport, xp: 30, timer: 30 },
+      { id: "lecture", name: NEW.lecture, xp: 25, timer: 20 },
+      { id: "code", name: NEW.code, xp: 25, timer: 30 },
+      { id: "eau", name: NEW.eau, xp: 5 },
+      { id: "plan", name: NEW.plan, xp: 5, timer: 5 }
     ];
   }
 
   function normalize(raw) {
-    var s = { v: 1, quests: [], days: {} };
+    var s = { v: 4, quests: [], days: {}, rest: {}, goal: GOAL_MIN };
+    var migrate = !!(raw && (+raw.v || 0) < 3);
+    var relevel = !!(raw && (+raw.v || 0) < 4);
+    if (raw && raw.goal !== null && isFinite(+raw.goal)) s.goal = Math.max(GOAL_MIN, Math.min(500, Math.round(+raw.goal)));
     var droppedScreens = false;
     if (raw && Array.isArray(raw.quests)) {
       s.quests = raw.quests.filter(function (q) {
@@ -233,7 +609,18 @@
       }).map(function (q) {
         var name = String(q.name).slice(0, 60);
         if (NEW[q.id] && name === OLD[q.id]) name = NEW[q.id];
-        return { id: String(q.id), name: name, xp: Math.max(5, Math.min(100, +q.xp || 10)) };
+        if (q.id === "code" && name === CODE_V2) name = NEW.code;
+        var o = { id: String(q.id), name: name, xp: Math.max(5, Math.min(100, +q.xp || 10)) };
+        if (migrate && QMIG[q.id] && o.xp === QMIG[q.id][0]) o.xp = QMIG[q.id][1];
+        var tm = +q.timer;
+        if (tm >= 1 && tm <= 180) o.timer = Math.round(tm);
+        else if (q.timer === undefined && DEFTIMER[q.id]) o.timer = DEFTIMER[q.id];
+        if (Array.isArray(q.days)) {
+          var ds = [];
+          q.days.forEach(function (x) { x = +x; if (x >= 0 && x <= 6 && ds.indexOf(x) < 0) ds.push(x); });
+          if (ds.length > 0 && ds.length < 7) o.days = ds.sort();
+        }
+        return o;
       });
     } else {
       s.quests = defaultQuests();
@@ -241,16 +628,48 @@
     var days = raw && raw.days && typeof raw.days === "object" ? raw.days : {};
     Object.keys(days).forEach(function (k) {
       var r = days[k];
-      if (!r || typeof r !== "object") return;
+      if (!r || typeof r !== "object" || !/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
       if (r.d && typeof r.d === "object") {
-        var d = {};
+        var d = {}, e = {};
         Object.keys(r.d).forEach(function (id) { if (isFinite(+r.d[id])) d[id] = +r.d[id]; });
+        if (r.e && typeof r.e === "object") Object.keys(r.e).forEach(function (id) { if (d[id] !== undefined) e[id] = 1; });
         var t = +r.t || 0;
-        if (droppedScreens) { delete d.ecrans; t = Math.max(0, t - 1); }
-        s.days[k] = { d: d, t: t };
+        if (droppedScreens) { delete d.ecrans; delete e.ecrans; t = Math.max(0, t - 1); }
+        s.days[k] = { d: d, e: e, t: t };
+        if (isFinite(+r.g) && r.g !== null) s.days[k].g = +r.g;
       } else {
         s.days[k] = { n: +r.n || 0, x: +r.x || 0, t: +r.t || 0 };
+        if (isFinite(+r.g) && r.g !== null) s.days[k].g = +r.g;
+        if (Array.isArray(r.q)) s.days[k].q = r.q.map(String).slice(0, 60);
       }
+    });
+    var rest = raw && raw.rest && typeof raw.rest === "object" ? raw.rest : {};
+    Object.keys(rest).forEach(function (k) { if (rest[k] && /^\d{4}-\d{2}-\d{2}$/.test(k)) s.rest[k] = true; });
+    s.why = {}; s.rewards = []; s.badges = {};
+    var why = raw && raw.why && typeof raw.why === "object" ? raw.why : {};
+    Object.keys(why).forEach(function (k) {
+      var w = why[k];
+      if (!w || typeof w !== "object" || !/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+      var o = {};
+      if (typeof w.r === "string") o.r = w.r.slice(0, 20);
+      if (typeof w.n === "string") o.n = w.n.slice(0, 200);
+      if (w.s) o.s = 1;
+      s.why[k] = o;
+    });
+    var rw = raw && Array.isArray(raw.rewards) ? raw.rewards : [];
+    s.rewards = rw.filter(function (x) { return x && x.id && x.text; }).map(function (x) {
+      return { id: String(x.id), text: String(x.text).slice(0, 80), level: Math.max(2, Math.min(99, Math.round(+x.level) || 2)), claimed: !!x.claimed };
+    });
+    var bd = raw && raw.badges && typeof raw.badges === "object" ? raw.badges : {};
+    Object.keys(bd).forEach(function (id) { if (typeof bd[id] === "string") s.badges[id] = bd[id]; });
+    s.seen = Math.max(0, Math.round(+(raw && raw.seen) || 0));
+    if (relevel) { s.seen = 0; delete s.badges.l3; delete s.badges.l5; delete s.badges.l10; }
+    s.pause = null;
+    if (raw && raw.pause && /^\d{4}-\d{2}-\d{2}$/.test(raw.pause.from) && /^\d{4}-\d{2}-\d{2}$/.test(raw.pause.to)) s.pause = { from: raw.pause.from, to: raw.pause.to };
+    s.notes = {};
+    var nt = raw && raw.notes && typeof raw.notes === "object" ? raw.notes : {};
+    Object.keys(nt).forEach(function (k) {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(k) && typeof nt[k] === "string" && nt[k].trim()) s.notes[k] = nt[k].slice(0, 300);
     });
     compact(s);
     return s;
@@ -261,15 +680,71 @@
       var r = s.days[k];
       if (k < today && r.d) {
         var ids = Object.keys(r.d);
-        s.days[k] = { n: ids.length, x: ids.reduce(function (a, id) { return a + r.d[id]; }, 0), t: r.t };
+        var c = { n: ids.length, x: ids.reduce(function (a, id) { return a + r.d[id]; }, 0), t: r.t };
+        if (r.g !== undefined) c.g = r.g;
+        c.q = ids;
+        s.days[k] = c;
       }
     });
   }
 
+  function activeOn(k) {
+    var wd = parseKey(k).getDay();
+    return state.quests.filter(function (q) { return !q.days || q.days.indexOf(wd) >= 0; });
+  }
+
+  function ensureToday() {
+    var act = activeOn(today).map(function (q) { return q.id; });
+    var r = state.days[today];
+    if (!r || !r.d) r = state.days[today] = { d: {}, e: {}, t: act.length };
+    if (!r.e) r.e = {};
+    Object.keys(r.d).forEach(function (id) {
+      if (act.indexOf(id) < 0) { delete r.d[id]; delete r.e[id]; }
+    });
+    r.t = act.length;
+    var sum = activeOn(today).reduce(function (a, q) { return a + q.xp; }, 0);
+    /* A goal already reached today is never raised after the fact. */
+    if (!(r.g > 0 && xpOf(r) >= r.g)) r.g = Math.min(state.goal, sum);
+    return r;
+  }
+
+  function findQuest(id) { return state.quests.filter(function (q) { return q.id === id; })[0]; }
+  function extraXp(q) { return Math.max(5, Math.round(q.xp / 10) * 5); }
   function countOf(r) { return !r ? 0 : (r.d ? Object.keys(r.d).length : (r.n || 0)); }
   function xpOf(r) { return !r ? 0 : (r.d ? Object.keys(r.d).reduce(function (a, id) { return a + r.d[id]; }, 0) : (r.x || 0)); }
-  function totalOf(k) { return k === today ? state.quests.length : ((state.days[k] && state.days[k].t) || 0); }
+  function totalOf(k) { return k === today ? activeOn(today).length : ((state.days[k] && state.days[k].t) || 0); }
   function complete(k) { var t = totalOf(k); return t > 0 && countOf(state.days[k]) >= t; }
+  /* A day counts for the streak when its XP goal is reached (old days without a goal: all quests done). */
+  function metOf(k) {
+    var r = state.days[k];
+    if (!r) return false;
+    if (r.g !== undefined) return r.g > 0 && xpOf(r) >= r.g;
+    return complete(k);
+  }
+  function goalNeed() { var r = state.days[today]; return r && r.g ? Math.max(0, r.g - xpOf(r)) : 0; }
+
+  function firstKey() {
+    var ks = Object.keys(state.days).concat(Object.keys(state.rest));
+    if (!ks.length) return today;
+    ks.sort();
+    return ks[0] < today ? ks[0] : today;
+  }
+
+  function dayStatus(k, fk) {
+    if (k > today) return "future";
+    if (state.rest[k]) return "rest";
+    var r = state.days[k];
+    if (k === today) {
+      var t = totalOf(k);
+      if (t === 0) return "neutral";
+      return metOf(k) ? "done" : "pending";
+    }
+    if (!r) return k >= fk ? "missed" : "none";
+    var t2 = r.t || 0;
+    if (t2 === 0) return "neutral";
+    if (metOf(k)) return "done";
+    return countOf(r) > 0 ? "part" : "missed";
+  }
 
   function totalXP() {
     var t = 0;
@@ -280,19 +755,49 @@
     return t;
   }
 
-  function streak() {
-    var n = 0, d = new Date();
-    if (!complete(key(d))) d.setDate(d.getDate() - 1);
-    for (var i = 0; i < 3650; i++) {
-      if (complete(key(d))) { n++; d.setDate(d.getDate() - 1); } else break;
+  function streak(fk) {
+    /* Safety net: a missed day halves the streak instead of resetting it. */
+    var n = 0;
+    for (var k = fk; k <= today; k = addDays(k, 1)) {
+      var st = dayStatus(k, fk);
+      if (st === "done") n++;
+      else if (st === "missed" || st === "part") n = Math.floor(n / 2);
     }
     return n;
   }
 
+  function stats(fk) {
+    var doneDays = 0, best = 0, run = 0;
+    for (var k = fk; k <= today; k = addDays(k, 1)) {
+      var st = dayStatus(k, fk);
+      if (st === "done") { doneDays++; run++; if (run > best) best = run; }
+      else if (st === "rest" || st === "neutral" || st === "pending") { /* skip */ }
+      else if (st === "missed" || st === "part") run = Math.floor(run / 2);
+    }
+    var start = addDays(today, -29);
+    if (start < fk) start = fk;
+    var done = 0, counted = 0;
+    for (var j = start; j <= today; j = addDays(j, 1)) {
+      var s2 = dayStatus(j, fk);
+      if (s2 === "done") { done++; counted++; }
+      else if (s2 === "part" || s2 === "missed") counted++;
+    }
+    return { doneDays: doneDays, best: best, rate: counted ? Math.round(done / counted * 100) : null };
+  }
+
+  function weekKeys(k) {
+    var off = (parseKey(k).getDay() + 6) % 7, out = [];
+    for (var i = 0; i < 7; i++) out.push(addDays(k, i - off));
+    return out;
+  }
+  function restUsedThisWeek() { return weekKeys(today).some(function (k) { return state.rest[k]; }); }
+
   /* Persistence: this device only */
   function persist() {
+    var msgs = checkAchievements(false);
     try { localStorage.setItem(LS, JSON.stringify(state)); saveFailed = false; } catch (e) { saveFailed = true; }
     render();
+    if (msgs.length) setTimeout(function () { toast(msgs.join(" ")); }, 1700);
   }
 
   function toast(msg) {
@@ -300,41 +805,304 @@
     t.textContent = msg;
     t.classList.add("show");
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2000);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2200);
   }
 
   /* Actions */
   function toggle(id) {
-    var q = state.quests.filter(function (x) { return x.id === id; })[0];
+    var q = findQuest(id);
     if (!q) return;
-    var r = state.days[today];
-    if (!r || !r.d) r = state.days[today] = { d: {}, t: state.quests.length };
+    var r = ensureToday();
+    var wasMet = metOf(today);
     var nowDone;
-    if (r.d[id] !== undefined) { delete r.d[id]; nowDone = false; } else { r.d[id] = q.xp; nowDone = true; }
-    r.t = state.quests.length;
-    lastFocus = id;
+    if (r.d[id] !== undefined) { delete r.d[id]; delete r.e[id]; nowDone = false; } else { r.d[id] = q.xp; nowDone = true; }
+    lastFocus = '[data-toggle="' + id + '"]';
     popId = nowDone ? id : null;
     persist();
     if (nowDone) {
-      var all = state.quests.length > 0 && countOf(r) >= state.quests.length;
-      toast(all ? "Journée validée. Bravo " + NAME + "." : CHEERS[countOf(r) % CHEERS.length]);
+      var all = countOf(r) >= activeOn(today).length;
+      if (all) toast("Journée complète. Bravo " + NAME + ".");
+      else if (!wasMet && metOf(today)) toast("Objectif atteint. Ta série est sauvée.");
+      else toast(CHEERS[countOf(r) % CHEERS.length]);
     }
   }
 
-  function addQuest(name, xp) {
+  function toggleExtra(id) {
+    var q = findQuest(id);
+    var r = ensureToday();
+    if (!q || r.d[id] === undefined) return;
+    if (r.e[id]) { delete r.e[id]; r.d[id] = q.xp; }
+    else { r.e[id] = 1; r.d[id] = q.xp + extraXp(q); toast("Au-delà du minimum. Respect."); }
+    lastFocus = '[data-extra="' + id + '"]';
+    persist();
+  }
+
+  function addQuest(name, xp, tm, days) {
     var id = "q" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
-    state.quests.push({ id: id, name: name, xp: xp });
-    var r = state.days[today];
-    if (r && r.d) r.t = state.quests.length;
+    var q = { id: id, name: name, xp: xp };
+    if (tm >= 1 && tm <= 180) q.timer = Math.round(tm);
+    if (days && days.length > 0 && days.length < 7) q.days = days.slice().sort();
+    state.quests.push(q);
+    ensureToday();
     persist();
   }
 
   function removeQuest(id) {
     state.quests = state.quests.filter(function (q) { return q.id !== id; });
-    var r = state.days[today];
-    if (r && r.d) { delete r.d[id]; r.t = state.quests.length; }
+    if (timer && timer.id === id) stopTimer();
+    ensureToday();
     confirmId = null;
     persist();
+  }
+
+  function toggleQuestDay(id, wd) {
+    var q = findQuest(id);
+    if (!q) return;
+    var cur = q.days ? q.days.slice() : [0, 1, 2, 3, 4, 5, 6];
+    var i = cur.indexOf(wd);
+    if (i >= 0) { if (cur.length === 1) return; cur.splice(i, 1); } else cur.push(wd);
+    if (cur.length === 7) delete q.days; else q.days = cur.sort();
+    ensureToday();
+    persist();
+  }
+
+  function xpSelect(q) {
+    var opts = [5, 10, 15, 20, 25, 30, 40, 50];
+    if (opts.indexOf(q.xp) < 0) { opts.push(q.xp); opts.sort(function (a, b) { return a - b; }); }
+    return '<select class="xp-edit" data-xpedit="' + q.id + '" aria-label="XP de ' + esc(q.name) + '">' + opts.map(function (v) {
+      return '<option value="' + v + '"' + (v === q.xp ? " selected" : "") + '>' + v + ' XP</option>';
+    }).join("") + '</select>';
+  }
+  /* Save without re-rendering, so typing in the next field is not interrupted. */
+  function saveOnly() {
+    try { localStorage.setItem(LS, JSON.stringify(state)); saveFailed = false; } catch (e) { saveFailed = true; }
+  }
+  function renameQuest(id, v) {
+    var q = findQuest(id);
+    v = String(v).trim().slice(0, 60);
+    if (!q) return;
+    if (!v) { renderList(); return; }
+    q.name = v;
+    saveOnly();
+  }
+  function setQuestTimer(id, v) {
+    var q = findQuest(id);
+    if (!q) return;
+    var n = parseInt(v, 10);
+    if (n >= 1 && n <= 180) q.timer = n; else delete q.timer;
+    saveOnly();
+  }
+  function setQuestXp(id, v) {
+    var q = findQuest(id);
+    v = +v;
+    if (!q || !(v >= 5 && v <= 100)) return;
+    q.xp = v;
+    ensureToday();
+    persist();
+  }
+  function saveNote() {
+    var v = $("#note-text").value.trim().slice(0, 300);
+    if (v) state.notes[today] = v; else delete state.notes[today];
+    persist();
+    toast(v ? "Note enregistrée. Demain, relis-la et ajuste." : "Note effacée.");
+  }
+  function renderNote() {
+    if (document.activeElement && document.activeElement.id === "note-text") return;
+    $("#note-text").value = state.notes[today] || "";
+  }
+  function reasonLabel(id) { var r = REASONS.filter(function (x) { return x[0] === id; })[0]; return r ? r[1] : ""; }
+
+  function questsTotal() { return state.quests.reduce(function (a, q) { return a + q.xp; }, 0); }
+  /* The slider goes beyond today's total so the goal keeps up when quests are added. */
+  function maxGoal() { return Math.max(GOAL_MAX_MIN, Math.ceil(questsTotal() / 10) * 10); }
+  function tierOf(g) { var t = TIERS[0]; TIERS.forEach(function (x) { if (g >= x.min) t = x; }); return t; }
+  function questsNeeded(g) {
+    var xs = state.quests.map(function (q) { return q.xp; }).sort(function (a, b) { return b - a; });
+    var sum = 0, n = 0;
+    for (var i = 0; i < xs.length; i++) { sum += xs[i]; n++; if (sum >= g) break; }
+    return { n: n, of: xs.length };
+  }
+  function setGoal(v) {
+    v = Math.round(v / 10) * 10;
+    var before = state.goal;
+    state.goal = Math.max(GOAL_MIN, Math.min(maxGoal(), v));
+    if (state.goal === before) return;
+    ensureToday();
+    persist();
+    toast(state.goal > before ? "Objectif relevé : " + tierOf(state.goal).name + ". Ça me plaît." : "Objectif ajusté : " + tierOf(state.goal).name + ".");
+  }
+
+  function takeRest() {
+    if (state.rest[today] || restUsedThisWeek()) return;
+    state.rest[today] = true;
+    persist();
+    toast("Repos accordé. Ta série est protégée.");
+  }
+  function cancelRest() {
+    if (pauseActive() && today >= state.pause.from) { endPause(); return; }
+    delete state.rest[today]; persist();
+  }
+
+  function pauseActive() { return !!(state.pause && state.pause.to >= today); }
+  function longDate(k) { return parseKey(k).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }); }
+  function nextPauseKey() { return state.pause && today <= addDays(state.pause.to, PAUSE_GAP) ? addDays(state.pause.to, PAUSE_GAP + 1) : null; }
+  function startPause(n) {
+    if (pauseActive()) return;
+    if (nextPauseKey()) { toast("Une pause est possible tous les " + PAUSE_GAP + " jours."); return; }
+    n = Math.max(2, Math.min(PAUSE_MAX, Math.round(n) || 2));
+    for (var i = 0; i < n; i++) state.rest[addDays(today, i)] = true;
+    state.pause = { from: today, to: addDays(today, n - 1) };
+    persist();
+    toast("Pause activée. Soigne-toi, on reprend après.");
+  }
+  function endPause() {
+    var p = state.pause;
+    if (!p) return;
+    for (var k = today; k <= p.to; k = addDays(k, 1)) delete state.rest[k];
+    state.pause = addDays(today, -1) >= p.from ? { from: p.from, to: addDays(today, -1) } : null;
+    persist();
+    toast("Tu reprends. Content de te revoir, " + NAME + ".");
+  }
+  function renderPause() {
+    var el = $("#pause-box");
+    var p = state.pause;
+    if (pauseActive()) {
+      el.innerHTML = '<p class="set-need">Pause en cours jusqu’au ' + esc(longDate(p.to)) + '. Ta série est protégée.</p><div class="why-actions"><button type="button" class="ghost" data-pause="end">Reprendre maintenant</button></div>';
+    } else if (nextPauseKey()) {
+      el.innerHTML = '<p class="goal-hint">Dernière pause terminée le ' + esc(longDate(p.to)) + '. Prochaine possible le ' + esc(longDate(nextPauseKey())) + '.</p>';
+    } else {
+      var opts = "";
+      for (var d = 2; d <= PAUSE_MAX; d++) opts += '<option value="' + d + '"' + (d === pauseDays ? " selected" : "") + '>' + d + ' jours</option>';
+      el.innerHTML = '<label class="field-label" for="pause-days">Durée de la pause</label><div class="why-actions"><select id="pause-days" class="xp-edit">' + opts + '</select><button type="button" class="primary" data-pause="start">Activer la pause</button></div>';
+    }
+  }
+
+  /* Timer */
+  function loadTimer() {
+    try {
+      var t = JSON.parse(localStorage.getItem(LS_TIMER) || "null");
+      if (t && t.id && t.total) {
+        timer = t;
+        if (!timer.paused && !timer.fin && timeLeft() <= 0) timer.fin = true;
+      }
+    } catch (e) {}
+  }
+  function saveTimer() {
+    try { if (timer) localStorage.setItem(LS_TIMER, JSON.stringify(timer)); else localStorage.removeItem(LS_TIMER); } catch (e) {}
+  }
+  function timeLeft() {
+    if (!timer) return 0;
+    if (timer.fin) return 0;
+    if (timer.paused) return timer.left;
+    return Math.max(0, Math.ceil((timer.end - Date.now()) / 1000));
+  }
+  function fmt(sec) {
+    var m = Math.floor(sec / 60), s = sec % 60;
+    return String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  }
+  function unlockAudio() {
+    try {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) { audioCtx = audioCtx || new AC(); if (audioCtx.state === "suspended") audioCtx.resume(); }
+    } catch (e) {}
+  }
+  function beep() {
+    try {
+      if (!audioCtx) return;
+      [0, 0.35, 0.7].forEach(function (t) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.frequency.value = 880; g.gain.value = 0.15;
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(audioCtx.currentTime + t); o.stop(audioCtx.currentTime + t + 0.2);
+      });
+    } catch (e) {}
+  }
+  function lockScreen() {
+    try {
+      if (navigator.wakeLock && !wake) {
+        navigator.wakeLock.request("screen").then(function (l) {
+          wake = l;
+          l.addEventListener("release", function () { wake = null; });
+        }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  function releaseLock() { try { if (wake) { wake.release(); wake = null; } } catch (e) {} }
+
+  function startTimer(id) {
+    var q = findQuest(id);
+    if (!q || !q.timer || timer) return;
+    timer = { id: q.id, name: q.name, total: q.timer * 60, left: q.timer * 60, end: Date.now() + q.timer * 60000, paused: false, fin: false };
+    unlockAudio(); lockScreen(); saveTimer(); renderTimer(); renderList();
+  }
+  function pauseTimer() {
+    if (!timer || timer.paused || timer.fin) return;
+    timer.left = timeLeft(); timer.paused = true;
+    releaseLock(); saveTimer(); renderTimer();
+  }
+  function resumeTimer() {
+    if (!timer || !timer.paused) return;
+    timer.end = Date.now() + timer.left * 1000; timer.paused = false;
+    unlockAudio(); lockScreen(); saveTimer(); renderTimer();
+  }
+  function stopTimer() {
+    timer = null; releaseLock(); saveTimer(); renderTimer(); renderList();
+  }
+  function finishTimer() {
+    if (!timer || timer.fin) return;
+    timer.fin = true; releaseLock(); beep(); saveTimer(); renderTimer();
+  }
+  function validateTimer() {
+    if (!timer) return;
+    var id = timer.id;
+    stopTimer();
+    var r = ensureToday();
+    if (findQuest(id) && r.d[id] === undefined && activeOn(today).some(function (q) { return q.id === id; })) toggle(id);
+  }
+  function tick() {
+    if (!timer || timer.paused || timer.fin) return;
+    if (timeLeft() <= 0) { finishTimer(); return; }
+    var el = $("#timer-time");
+    if (el) el.textContent = fmt(timeLeft());
+  }
+
+  /* Backup */
+  function exportData() {
+    var json = JSON.stringify({ app: "cap-quotidien", exportedAt: new Date().toISOString(), data: state });
+    $("#backup-text").value = json;
+    var shared = false;
+    try {
+      if (navigator.share) {
+        navigator.share({ title: "Sauvegarde Cap Quotidien", text: json }).catch(function () {});
+        shared = true;
+      }
+    } catch (e) {}
+    if (!shared) {
+      try {
+        navigator.clipboard.writeText(json).then(function () { toast("Sauvegarde copiée."); }).catch(function () { toast("Appuie longuement dans le cadre pour copier le texte."); });
+      } catch (e) { toast("Appuie longuement dans le cadre pour copier le texte."); }
+    }
+  }
+
+  function importData() {
+    var txt = $("#backup-text").value.trim();
+    var data = null;
+    try { var obj = JSON.parse(txt); data = obj && obj.data ? obj.data : obj; } catch (e) {}
+    var ok = data && typeof data === "object" && (Array.isArray(data.quests) || (data.days && typeof data.days === "object"));
+    if (!ok) { importArmed = false; $("#import-btn").textContent = "Restaurer"; toast("Sauvegarde invalide. Vérifie que tu as collé tout le texte."); return; }
+    if (!importArmed) {
+      importArmed = true;
+      $("#import-btn").textContent = "Confirmer le remplacement";
+      toast("Ça remplacera ta progression actuelle.");
+      return;
+    }
+    importArmed = false;
+    $("#import-btn").textContent = "Restaurer";
+    state = normalize(data);
+    ensureToday();
+    checkAchievements(true);
+    persist();
+    toast("Progression restaurée.");
   }
 
   /* Words */
@@ -345,27 +1113,32 @@
 
   function dailyMessage(s) {
     var now = new Date();
+    var total = activeOn(today).length;
     var done = countOf(state.days[today]);
-    var total = state.quests.length;
     var left = total - done;
-    if (total > 0 && left <= 0) return "Journée validée. Tu as tenu ta parole, et ça se sent.";
-    if (s > 0 && now.getHours() >= 18) return "Ta série de " + s + (s === 1 ? " jour" : " jours") + " se joue ce soir. Plus que " + left + (left === 1 ? " quête" : " quêtes") + ", tu y es presque.";
+    var need = goalNeed();
+    if (state.rest[today]) return "Jour de repos. Ta série est protégée, profites-en.";
+    if (total > 0 && left <= 0) return "Journée complète. Tu as tenu ta parole, et ça se sent.";
+    if (total === 0) return "Rien de prévu aujourd’hui. Ta série continue.";
+    if (metOf(today)) return "Objectif atteint, ta série est sauvée. Le reste, c’est du bonus.";
+    if (s > 0 && now.getHours() >= 18) return "Ta série de " + s + (s === 1 ? " jour" : " jours") + " se joue ce soir. Plus que " + need + " XP, tu y es presque.";
     var start = new Date(now.getFullYear(), 0, 0);
     var dayOfYear = Math.floor((now - start) / 86400000);
     return MESSAGES[dayOfYear % MESSAGES.length];
   }
 
   /* Rendering */
-  function renderHero() {
+  function renderHero(fk) {
     var tot = totalXP();
-    var L = Math.floor(Math.sqrt(tot / 100)) + 1;
-    var start = 100 * Math.pow(L - 1, 2), next = 100 * L * L;
+    var L = levelOf(tot);
+    var start = xpFor(L), next = xpFor(L + 1);
     var frac = (tot - start) / (next - start);
     var pct = Math.round(frac * 100);
     var C = 2 * Math.PI * 36;
-    var s = streak();
+    var s = streak(fk);
     var date = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
     $("#hero").innerHTML =
+      '<p class="tagline">' + esc(TAGLINE) + '</p>' +
       '<div class="greet-row"><div><h1>' + esc(greeting()) + '</h1><p class="date">' + esc(date) + '</p></div>' +
         '<div class="streak' + (s === 0 ? " off" : "") + '">' + FLAME + '<span>' + (s === 0 ? "Série à lancer" : s + (s === 1 ? " jour" : " jours")) + '</span></div></div>' +
       '<div class="levelcard">' +
@@ -378,73 +1151,519 @@
       '<p class="note">' + esc(dailyMessage(s)) + '</p>';
   }
 
-  function renderWeek() {
+  function renderWeek(fk) {
     var html = "";
     for (var i = 6; i >= 0; i--) {
-      var d = new Date();
-      d.setDate(d.getDate() - i);
-      var k = key(d);
+      var k = addDays(today, -i);
+      var d = parseKey(k);
+      var st = dayStatus(k, fk);
       var t = totalOf(k), c = countOf(state.days[k]);
-      var ratio = t > 0 ? Math.min(1, c / t) : 0;
-      var full = ratio >= 1;
+      var rr = state.days[k];
+      var ratio = rr && rr.g ? Math.min(1, xpOf(rr) / rr.g) : (t > 0 ? Math.min(1, c / t) : 0);
+      var cls = st === "done" ? " full" : (st === "rest" ? " rest" : "");
+      var inner = st === "done" ? CHECK : (st === "rest" ? DASH : "");
       var label = d.toLocaleDateString("fr-FR", { weekday: "narrow" });
       var long = d.toLocaleDateString("fr-FR", { weekday: "long" });
       html += '<div class="day' + (k === today ? " today" : "") + '">' +
-        '<div class="dot' + (full ? " full" : "") + '" style="--p:' + Math.round(ratio * 100) + '" role="img" aria-label="' + long + " : " + c + " sur " + t + '">' + (full ? CHECK : "") + '</div>' +
+        '<div class="dot' + cls + '" style="--p:' + Math.round(ratio * 100) + '" role="img" aria-label="' + long + " : " + (st === "rest" ? "repos" : (st === "done" ? "objectif atteint" : c + " quêtes sur " + t)) + '">' + inner + '</div>' +
         '<span class="day-lab">' + label + '</span></div>';
     }
     $("#week").innerHTML = html;
   }
 
+  function renderTimer() {
+    var el = $("#timer");
+    if (!timer) { el.innerHTML = ""; return; }
+    var r = state.days[today];
+    var alreadyDone = r && r.d && r.d[timer.id] !== undefined;
+    var name = esc(timer.name);
+    if (timer.fin) {
+      el.innerHTML = '<div class="timer"><div class="timer-top">Chrono terminé · ' + name + '</div><div class="timer-time">00:00</div><div class="timer-actions">' +
+        (alreadyDone ? "" : '<button type="button" class="primary" data-tact="validate">Valider la quête</button>') +
+        '<button type="button" class="ghost" data-tact="stop">Fermer</button></div></div>';
+    } else if (timer.paused) {
+      el.innerHTML = '<div class="timer"><div class="timer-top">En pause · ' + name + '</div><div class="timer-time" id="timer-time" role="timer">' + fmt(timer.left) + '</div><div class="timer-actions">' +
+        '<button type="button" class="primary" data-tact="resume">Reprendre</button><button type="button" class="ghost" data-tact="stop">Arrêter</button></div></div>';
+    } else {
+      el.innerHTML = '<div class="timer"><div class="timer-top">Chrono · ' + name + '</div><div class="timer-time" id="timer-time" role="timer">' + fmt(timeLeft()) + '</div><div class="timer-actions">' +
+        '<button type="button" class="ghost" data-tact="pause">Pause</button><button type="button" class="ghost" data-tact="stop">Arrêter</button></div></div>';
+    }
+  }
+
+  function renderGoal() {
+    var r = state.days[today];
+    var el = $("#goal");
+    if (!r || !r.g || state.rest[today]) { el.innerHTML = ""; return; }
+    var xp = xpOf(r), met = xp >= r.g;
+    var pct = Math.min(100, Math.round(xp / r.g * 100));
+    var html = '<div class="goal' + (met ? " met" : "") + '"><div class="goal-top"><span>Objectif de série</span><span>' + Math.min(xp, 9999) + ' / ' + r.g + ' XP</span></div>' +
+      '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + r.g + '" aria-valuenow="' + Math.min(xp, r.g) + '"><i style="width:' + pct + '%"></i></div>' +
+      '<div class="goal-hint">' + (met ? "Ta série est sauvée pour aujourd’hui." : "Atteins " + r.g + " XP pour sauver ta série. Pas besoin de tout faire.") + '</div>';
+    el.innerHTML = html + '</div>';
+  }
+
+  /* Achievements, weeks, reasons */
+  /* XP needed to reach level L: 400 for level 2, then each level costs 200 more than the previous one (600, 800, 1000...). */
+  function xpFor(L) { return 100 * (L - 1) * (L + 2); }
+  function levelOf(t) {
+    var L = Math.max(1, Math.floor((-1 + Math.sqrt(9 + t / 25)) / 2));
+    while (xpFor(L + 1) <= t) L++;
+    while (L > 1 && xpFor(L) > t) L--;
+    return L;
+  }
+  function shortName(n) { return String(n).split(":")[0].trim(); }
+
+  function weekDoneCount(start, fk) {
+    var n = 0;
+    for (var i = 0; i < 7; i++) {
+      var k = addDays(start, i);
+      if (k > today) break;
+      if (dayStatus(k, fk) === "done") n++;
+    }
+    return n;
+  }
+  function weekXp(start) {
+    var t = 0;
+    for (var i = 0; i < 7; i++) {
+      var k = addDays(start, i);
+      if (k > today) break;
+      t += xpOf(state.days[k]);
+      if (complete(k)) t += BONUS;
+    }
+    return t;
+  }
+
+  function questStats(start, fk) {
+    var map = {};
+    for (var i = 0; i < 7; i++) {
+      var k = addDays(start, i);
+      if (k >= today || k < fk || state.rest[k]) continue;
+      var r = state.days[k];
+      var doneIds = r ? (r.d ? Object.keys(r.d) : r.q) : [];
+      if (r && !doneIds) continue;
+      activeOn(k).forEach(function (q) {
+        var m = map[q.id] || (map[q.id] = { name: shortName(q.name), p: 0, d: 0 });
+        m.p++;
+        if (doneIds.indexOf(q.id) >= 0) m.d++;
+      });
+    }
+    var list = Object.keys(map).map(function (id) { return map[id]; }).filter(function (m) { return m.p >= 3; });
+    if (!list.length) return null;
+    list.sort(function (a, b) { return (b.d / b.p) - (a.d / a.p); });
+    var best = list[0], worst = list[list.length - 1];
+    return { star: best, work: (worst !== best && worst.d / worst.p < best.d / best.p) ? worst : null };
+  }
+
+  function reasonSummary() {
+    var start = addDays(today, -29), map = {};
+    Object.keys(state.why).forEach(function (k) {
+      var w = state.why[k];
+      if (k >= start && w.r) map[w.r] = (map[w.r] || 0) + 1;
+    });
+    return REASONS.filter(function (r) { return map[r[0]]; }).map(function (r) { return [r[1], map[r[0]]]; }).sort(function (a, b) { return b[1] - a[1]; });
+  }
+
+  function badgeContext(fk) {
+    var st = stats(fk);
+    var c = { best: st.best, doneDays: st.doneDays, level: levelOf(totalXP()), whys: 0, weeks: 0, rebound: false, full: false };
+    Object.keys(state.why).forEach(function (k) { if (state.why[k].r) c.whys++; });
+    c.full = Object.keys(state.days).some(function (k) { return complete(k); });
+    var cur = weekKeys(today)[0];
+    for (var w = weekKeys(fk)[0]; w <= cur; w = addDays(w, 7)) if (weekDoneCount(w, fk) >= CHALLENGE) c.weeks++;
+    for (var k = addDays(fk, 1); k <= today; k = addDays(k, 1)) {
+      if (dayStatus(k, fk) !== "done") continue;
+      var p = dayStatus(addDays(k, -1), fk);
+      if (p === "missed" || p === "part") { c.rebound = true; break; }
+    }
+    return c;
+  }
+
+  function checkAchievements(silent) {
+    var fk = firstKey(), c = badgeContext(fk), msgs = [];
+    BADGES.forEach(function (b) {
+      if (!state.badges[b.id] && b.test(c)) {
+        state.badges[b.id] = today;
+        if (!silent) msgs.push("Badge débloqué : " + b.name + ".");
+      }
+    });
+    if (c.level > state.seen) {
+      if (!silent) {
+        msgs.unshift("Niveau " + c.level + " atteint.");
+        state.rewards.forEach(function (r) {
+          if (!r.claimed && r.level > state.seen && r.level <= c.level) msgs.push("Récompense débloquée : " + r.text + ".");
+        });
+      }
+      state.seen = c.level;
+    }
+    return msgs;
+  }
+
+  function whyCandidate(fk) {
+    for (var i = 1; i <= 7; i++) {
+      var k = addDays(today, -i);
+      if (k < fk) break;
+      var st = dayStatus(k, fk);
+      if ((st === "missed" || st === "part") && !state.why[k]) return k;
+    }
+    return null;
+  }
+
+  function renderWhy(fk) {
+    var el = $("#why");
+    if (document.activeElement && document.activeElement.id === "why-note") return;
+    var k = whyCandidate(fk);
+    if (!k) { el.hidden = true; el.innerHTML = ""; return; }
+    el.hidden = false;
+    var label = k === addDays(today, -1) ? "Hier" : parseKey(k).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+    var head = dayStatus(k, fk) === "part" ? label + ", tu n’as pas atteint ton objectif." : label + ", ça n’a pas pris.";
+    el.innerHTML = '<div class="card why"><h2 class="why-title">' + esc(head) + '</h2>' +
+      '<p>Pas de jugement. Comprendre ce qui s’est passé, c’est ce qui évite que ça se répète. C’était quoi, le vrai frein ?</p>' +
+      '<div class="reasons" role="group" aria-label="Raison">' + REASONS.map(function (r) {
+        return '<button type="button" class="chip-btn" data-why="' + r[0] + '" aria-pressed="' + (whyPick === r[0]) + '">' + r[1] + '</button>';
+      }).join("") + '</div>' +
+      '<input type="text" id="why-note" maxlength="200" placeholder="Un mot de plus, si tu veux" aria-label="Précision facultative" value="' + esc(whyNote) + '">' +
+      '<div class="why-actions"><button type="button" class="primary" data-whysave="' + k + '"' + (whyPick ? "" : " disabled") + '>Enregistrer</button>' +
+      '<button type="button" class="ghost" data-whyskip="' + k + '">Passer</button></div></div>';
+  }
+
+  function renderWeekBox(fk) {
+    var start = weekKeys(today)[0];
+    var n = weekDoneCount(start, fk), xp = weekXp(start);
+    var ok = n >= CHALLENGE;
+    var daysLeft = 7 - ((new Date().getDay() + 6) % 7);
+    var msg;
+    if (ok) msg = "Défi réussi. Le reste de la semaine, c’est du bonus.";
+    else if (n + daysLeft < CHALLENGE) msg = "Le défi est hors de portée cette semaine. On se rattrape la prochaine, sans lâcher.";
+    else msg = "Encore " + (CHALLENGE - n) + (CHALLENGE - n > 1 ? " jours" : " jour") + " à valider. Il te reste " + daysLeft + (daysLeft > 1 ? " jours" : " jour") + ", aujourd’hui compris.";
+    var html = '<div class="goal' + (ok ? " met" : "") + '"><div class="goal-top"><span>Défi de la semaine</span><span>' + Math.min(n, CHALLENGE) + ' / ' + CHALLENGE + ' jours</span></div>' +
+      '<div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="' + CHALLENGE + '" aria-valuenow="' + Math.min(n, CHALLENGE) + '"><i style="width:' + Math.min(100, Math.round(n / CHALLENGE * 100)) + '%"></i></div>' +
+      '<div class="goal-hint">Atteins ton objectif de série ' + CHALLENGE + ' jours sur 7. ' + msg + '</div>' +
+      '<div class="goal-hint">Cette semaine : ' + xp + ' XP</div></div>';
+    var prev = addDays(start, -7);
+    var had = false;
+    for (var i = 0; i < 7; i++) { var pk = addDays(prev, i); if (pk >= fk && (state.days[pk] || state.rest[pk])) had = true; }
+    if (had) {
+      var pn = weekDoneCount(prev, fk), qs = questStats(prev, fk);
+      html += '<div class="card"><h3 class="card-title">Semaine dernière</h3><p class="set-need">' + pn + ' jour' + (pn > 1 ? "s" : "") + ' validé' + (pn > 1 ? "s" : "") + ' sur 7 · ' + weekXp(prev) + ' XP' + (pn >= CHALLENGE ? " · défi réussi" : "") + '</p>';
+      if (qs) {
+        html += '<p class="goal-hint">Quête star : <b>' + esc(qs.star.name) + '</b> (' + qs.star.d + '/' + qs.star.p + ')' + (qs.work ? '. À travailler : <b>' + esc(qs.work.name) + '</b> (' + qs.work.d + '/' + qs.work.p + ')' : "") + '.</p>';
+      }
+      html += '</div>';
+    }
+    var rs = reasonSummary();
+    if (rs.length) {
+      html += '<div class="card"><h3 class="card-title">Ce qui te freine (30 jours)</h3><div class="reasons">' + rs.map(function (r) { return '<span class="chip-btn static">' + esc(r[0]) + ' × ' + r[1] + '</span>'; }).join("") + '</div></div>';
+    }
+    var nk = Object.keys(state.notes).sort().reverse().slice(0, 7);
+    if (nk.length) {
+      html += '<div class="card"><h3 class="card-title">Tes dernières notes</h3>' + nk.map(function (k) {
+        var w = state.why[k];
+        var tag = w && w.r ? " · " + esc(reasonLabel(w.r)) : "";
+        return '<p class="note-item"><b>' + esc(parseKey(k).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" })) + tag + '</b><br>' + esc(state.notes[k]) + '</p>';
+      }).join("") + '</div>';
+    }
+    $("#weekbox").innerHTML = html;
+  }
+
+  function renderRewards() {
+    var tot = totalXP(), L = levelOf(tot);
+    var list = state.rewards.slice().sort(function (a, b) { return a.level - b.level; });
+    if (!list.length) {
+      $("#rewards").innerHTML = '<li class="empty">Pas encore de récompense. Offre-toi quelque chose quand tu montes de niveau : tu y penseras les jours où ça tire.</li>';
+      return;
+    }
+    $("#rewards").innerHTML = list.map(function (r) {
+      var open = L >= r.level;
+      var need = xpFor(r.level) - tot;
+      var sub = open ? (r.claimed ? "Déjà prise" : "Débloquée, tu l’as méritée") : "Encore " + need + " XP";
+      return '<li><div class="rw' + (open ? " open" : " locked") + '"><span class="rw-lv">Niv. ' + r.level + '</span>' +
+        '<span class="name">' + esc(r.text) + '<small>' + sub + '</small></span>' +
+        '<span class="rw-actions">' + (open ? '<button type="button" class="chip-btn" data-rwclaim="' + r.id + '" aria-pressed="' + r.claimed + '">Je l’ai prise</button>' : "") +
+        '<button type="button" class="remove' + (confirmRw === r.id ? " confirm" : "") + '" data-rwdel="' + r.id + '">' + (confirmRw === r.id ? "Confirmer" : "Retirer") + '</button></span></div></li>';
+    }).join("");
+  }
+
+  function renderBadges() {
+    var n = 0;
+    $("#badges").innerHTML = BADGES.map(function (b) {
+      var got = state.badges[b.id];
+      if (got) n++;
+      return '<div class="badge' + (got ? "" : " locked") + '"><span class="ic">' + (got ? STAR : LOCK) + '</span><div><b>' + b.name + '</b><span>' + b.hint + '</span></div></div>';
+    }).join("");
+    $("#badge-count").textContent = n + " sur " + BADGES.length;
+  }
+
+  function renderSettings(preview) {
+    var max = maxGoal();
+    var g = preview !== undefined ? preview : Math.min(state.goal, max);
+    var r = $("#goal-range");
+    r.min = GOAL_MIN; r.max = max; r.step = 10;
+    if (preview === undefined) r.value = g;
+    r.disabled = max <= GOAL_MIN;
+    var t = tierOf(g), qn = questsNeeded(g);
+    $("#goal-tier").textContent = t.name;
+    $("#goal-val").textContent = g + " XP";
+    $("#goal-txt").textContent = max <= GOAL_MIN ? "Ajoute des quêtes pour pouvoir monter la barre." : t.txt;
+    $("#goal-max").textContent = max + " XP";
+    var total = questsTotal();
+    $("#goal-need").textContent = g > total
+      ? "Avec tes quêtes actuelles (" + total + " XP possibles), il te les faut toutes. Ajoute des quêtes pour que cet objectif ait du sens."
+      : "Il te faut au moins " + qn.n + (qn.n > 1 ? " quêtes" : " quête") + " sur " + qn.of + " pour sauver ta série.";
+  }
+
+  function renderRest() {
+    var el = $("#rest");
+    if (state.rest[today]) {
+      el.innerHTML = '<div class="rest on"><span>Jour de repos. Ta série est protégée.</span><button type="button" class="ghost" data-rest="cancel">Annuler le repos</button></div>';
+    } else if (!restUsedThisWeek()) {
+      el.innerHTML = '<div class="rest"><span>Un repos par semaine protège ta série.</span><button type="button" class="link-btn" data-rest="take">Prendre un repos</button></div>';
+    } else {
+      el.innerHTML = '<div class="rest"><span>Repos de la semaine déjà utilisé.</span></div>';
+    }
+  }
+
+  function daysChips(sel, attr) {
+    return WEEK_ORDER.map(function (wd) {
+      return '<button type="button" class="dchip" ' + attr(wd) + ' aria-pressed="' + (sel.indexOf(wd) >= 0) + '" aria-label="' + DAY_NAME[wd] + '">' + DAY_LET[wd] + '</button>';
+    }).join("");
+  }
+
   function renderList() {
     var r = state.days[today];
     var done = r && r.d ? r.d : {};
+    var extra = r && r.e ? r.e : {};
+    var act = activeOn(today);
     var n = Object.keys(done).length;
     var xp = xpOf(r);
-    $("#list-meta").textContent = state.quests.length ? (n + " sur " + state.quests.length + " faites · " + xp + " XP gagnés aujourd’hui") : "";
-    if (!state.quests.length) {
-      $("#list").innerHTML = '<li class="empty">Pas encore de quête. Touche « Modifier » pour ajouter la première.</li>';
+    if (editMode) $("#list-meta").textContent = state.quests.length + (state.quests.length > 1 ? " quêtes" : " quête") + " au total";
+    else $("#list-meta").textContent = act.length ? (n + " sur " + act.length + " faites · " + xp + " XP aujourd’hui") : "";
+    var list = editMode ? state.quests : act;
+    if (!list.length) {
+      $("#list").innerHTML = '<li class="empty">' + (state.quests.length ? "Aucune quête prévue aujourd’hui. Profites-en." : "Pas encore de quête. Touche « Modifier » pour ajouter la première.") + '</li>';
     } else {
-      $("#list").innerHTML = state.quests.map(function (q) {
+      $("#list").innerHTML = list.map(function (q) {
+        var info = (q.timer ? "Chrono " + q.timer + " min" : "") + (q.timer && q.days ? " · " : "") + (q.days ? WEEK_ORDER.filter(function (w) { return q.days.indexOf(w) >= 0; }).map(function (w) { return DAY_NAME[w].slice(0, 3); }).join(", ") : "");
         if (editMode) {
-          return '<li><div class="row edit"><span class="name">' + esc(q.name) + '</span><span class="xp">' + q.xp + ' XP</span>' +
-            '<button type="button" class="remove' + (confirmId === q.id ? " confirm" : "") + '" data-remove="' + q.id + '">' + (confirmId === q.id ? "Confirmer" : "Retirer") + '</button></div></li>';
+          return '<li><div class="tile"><div class="edit-top"><input type="text" class="name-edit" data-nameedit="' + q.id + '" value="' + esc(q.name) + '" maxlength="60" aria-label="Nom de la quête">' + xpSelect(q) +
+            '<button type="button" class="remove' + (confirmId === q.id ? " confirm" : "") + '" data-remove="' + q.id + '">' + (confirmId === q.id ? "Confirmer" : "Retirer") + '</button></div>' +
+            '<div class="edit-timer"><label for="tm-' + q.id + '">Chrono (min)</label><input type="number" id="tm-' + q.id + '" data-timeredit="' + q.id + '" inputmode="numeric" min="1" max="180" value="' + (q.timer || "") + '" placeholder="aucun"></div>' +
+            '<div class="days" role="group" aria-label="Jours de la quête">' + daysChips(q.days || [0, 1, 2, 3, 4, 5, 6], function (wd) { return 'data-qday="' + q.id + ":" + wd + '"'; }) + '</div></div></li>';
         }
         var isDone = done[q.id] !== undefined;
-        return '<li><button type="button" class="row' + (isDone ? " done" : "") + (popId === q.id ? " just" : "") + '" data-toggle="' + q.id + '" aria-pressed="' + isDone + '">' +
-          '<span class="box">' + CHECK + '</span><span class="name">' + esc(q.name) + '</span><span class="xp">+' + q.xp + ' XP</span></button></li>';
+        var isExtra = !!extra[q.id];
+        var sub = "";
+        if (isDone) sub = '<div class="sub"><button type="button" class="chip-btn" data-extra="' + q.id + '" aria-pressed="' + isExtra + '">Fait plus que le minimum · +' + extraXp(q) + ' XP</button></div>';
+        else if (q.timer) sub = '<div class="sub"><button type="button" class="chip-btn" data-timer="' + q.id + '"' + (timer ? " disabled" : "") + '>Lancer le chrono · ' + q.timer + ' min</button></div>';
+        return '<li><div class="tile' + (isDone ? " done" : "") + (popId === q.id ? " just" : "") + '">' +
+          '<button type="button" class="main" data-toggle="' + q.id + '" aria-pressed="' + isDone + '"><span class="box">' + CHECK + '</span><span class="name">' + esc(q.name) + '</span><span class="xp">+' + (isDone ? done[q.id] : q.xp) + ' XP</span></button>' +
+          sub + '</div></li>';
       }).join("");
     }
-    var all = state.quests.length > 0 && n >= state.quests.length;
+    var all = act.length > 0 && n >= act.length;
     $("#bonus").innerHTML = all ? '<div class="bonus">Journée validée. +' + BONUS + ' XP de bonus, tu les as mérités.</div>' : "";
     popId = null;
     if (lastFocus) {
-      var el = document.querySelector('[data-toggle="' + lastFocus + '"]');
-      if (el) el.focus();
+      var el = document.querySelector(lastFocus);
+      if (el && el.focus) el.focus();
       lastFocus = null;
     }
+  }
+
+  function renderNewDays() {
+    $("#new-days").innerHTML = daysChips(newDays, function (wd) { return 'data-nday="' + wd + '"'; });
+  }
+
+  function renderHistory(fk) {
+    var y = viewMonth.y, m = viewMonth.m;
+    var cur = parseKey(today);
+    $("#month-title").textContent = new Date(y, m, 1).toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    $("#month-next").disabled = y > cur.getFullYear() || (y === cur.getFullYear() && m >= cur.getMonth());
+    var offset = (new Date(y, m, 1).getDay() + 6) % 7;
+    var dim = new Date(y, m + 1, 0).getDate();
+    var LABEL = { done: "validé", part: "partiel", missed: "manqué", rest: "repos", pending: "en cours", future: "à venir", none: "rien", neutral: "rien de prévu" };
+    var html = WEEK_ORDER.map(function (wd) { return '<span class="h">' + DAY_LET[wd] + '</span>'; }).join("");
+    for (var i = 0; i < offset; i++) html += '<span class="cd empty"></span>';
+    for (var d = 1; d <= dim; d++) {
+      var k = key(new Date(y, m, d));
+      var st = dayStatus(k, fk);
+      var cls = st;
+      if (st === "pending") cls = countOf(state.days[k]) > 0 ? "part" : "";
+      if (st === "neutral") cls = "none";
+      html += '<span class="cd ' + cls + (k === today ? " today" : "") + '" role="img" aria-label="' + d + ' : ' + LABEL[st] + '">' + d + '</span>';
+    }
+    $("#cal").innerHTML = html;
+    var s = stats(fk);
+    $("#stats").innerHTML =
+      '<div class="stat"><b>' + s.doneDays + '</b><span>jours validés</span></div>' +
+      '<div class="stat"><b>' + s.best + '</b><span>meilleure série</span></div>' +
+      '<div class="stat"><b>' + (s.rate === null ? "–" : s.rate + " %") + '</b><span>réussite sur 30 jours</span></div>';
   }
 
   function renderStatus() {
     var standalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
     var html = saveFailed
       ? "Sauvegarde impossible sur cet appareil. Tes derniers changements risquent d'être perdus."
-      : "Tes données restent sur cet iPhone. Si tu supprimes l'app, ta progression part avec.";
+      : "Tes données restent sur cet iPhone. Si tu supprimes l'app, ta progression part avec : pense à l’exporter.";
     if (!standalone) html += "<span>Pour l'installer : touche Partager dans Safari, puis « Sur l'écran d'accueil ».</span>";
     $("#status").innerHTML = html;
   }
 
-  function render() { renderHero(); renderWeek(); renderList(); renderStatus(); }
+  function render() {
+    var fk = firstKey();
+    renderHero(fk); renderWeek(fk); renderTimer(); renderWhy(fk); renderGoal(); renderSettings(); renderRest(); renderWeekBox(fk); renderRewards(); renderBadges(); renderNote(); renderPause(); renderList(); renderHistory(fk); renderStatus();
+  }
 
   /* Events */
   $("#list").addEventListener("click", function (e) {
     var t = e.target.closest("[data-toggle]");
     if (t) { toggle(t.getAttribute("data-toggle")); return; }
+    var ex = e.target.closest("[data-extra]");
+    if (ex) { toggleExtra(ex.getAttribute("data-extra")); return; }
+    var tm = e.target.closest("[data-timer]");
+    if (tm) { startTimer(tm.getAttribute("data-timer")); return; }
+    var qd = e.target.closest("[data-qday]");
+    if (qd) { var p = qd.getAttribute("data-qday").split(":"); toggleQuestDay(p[0], +p[1]); return; }
     var rm = e.target.closest("[data-remove]");
     if (rm) {
       var id = rm.getAttribute("data-remove");
       if (confirmId === id) removeQuest(id); else { confirmId = id; renderList(); }
     }
+  });
+
+  $("#list").addEventListener("change", function (e) {
+    var sel = e.target.closest("[data-xpedit]");
+    if (sel) { setQuestXp(sel.getAttribute("data-xpedit"), sel.value); return; }
+    var nm = e.target.closest("[data-nameedit]");
+    if (nm) { renameQuest(nm.getAttribute("data-nameedit"), nm.value); return; }
+    var tm = e.target.closest("[data-timeredit]");
+    if (tm) setQuestTimer(tm.getAttribute("data-timeredit"), tm.value);
+  });
+  $("#note-save").addEventListener("click", saveNote);
+
+  function openWelcome() {
+    $("#welcome").hidden = false;
+    $(".wrap").inert = true;
+    $("#tabs").inert = true;
+    try { $("#welcome-go").focus(); } catch (e) {}
+  }
+  function closeWelcome() {
+    try { localStorage.setItem(LS_WELCOME, "1"); } catch (e) {}
+    $("#welcome").hidden = true;
+    $(".wrap").inert = false;
+    $("#tabs").inert = false;
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+  $("#welcome-go").addEventListener("click", closeWelcome);
+  $("#welcome-again").addEventListener("click", openWelcome);
+
+  function appUrl() { return String(location.href).split("#")[0].split("?")[0]; }
+  function reminderMsg() {
+    return "Je viens d’installer l’app Cap Quotidien (" + appUrl() + "), une app de quêtes quotidiennes pour construire ma discipline. " +
+      "Crée-moi des rappels dans l’app Rappels de mon téléphone pour m’aider à l’utiliser : un le matin pour lancer ma première quête, un à mi-journée pour faire le point sur mon objectif d’XP, un le soir pour sauver ma série, et un rappel d’export de sauvegarde chaque dimanche. " +
+      "Demande-moi d’abord à quelle heure je me lève et me couche pour choisir les bons horaires. Mets le lien de l’app dans chaque rappel.";
+  }
+  function copyText(txt, okMsg) {
+    try {
+      navigator.clipboard.writeText(txt).then(function () { toast(okMsg); }).catch(function () { toast("Copie impossible ici. Touche longuement le lien pour le copier."); });
+    } catch (e) { toast("Copie impossible ici. Touche longuement le lien pour le copier."); }
+  }
+  $("#remind-link").href = "https://claude.ai/new?q=" + encodeURIComponent(reminderMsg());
+  $("#remind-copy").addEventListener("click", function () { copyText(reminderMsg(), "Message copié. Colle-le dans Claude."); });
+  function shareApp() {
+    var text = "Je te partage Cap Quotidien, mon app de discipline : quêtes du jour, XP, série et niveaux. Ouvre le lien dans Safari, puis touche Partager > « Sur l’écran d’accueil » pour l’installer comme une vraie app.";
+    var shared = false;
+    try { if (navigator.share) { navigator.share({ title: "Cap Quotidien", text: text, url: appUrl() }).catch(function () {}); shared = true; } } catch (e) {}
+    if (!shared) copyText(text + " " + appUrl(), "Invitation copiée. Colle-la dans un message.");
+  }
+  $("#share-btn").addEventListener("click", shareApp);
+  $("#share-top").addEventListener("click", shareApp);
+  $("#pause-box").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-pause]");
+    if (!b) return;
+    if (b.getAttribute("data-pause") === "start") startPause(pauseDays); else endPause();
+  });
+  $("#pause-box").addEventListener("change", function (e) { if (e.target.id === "pause-days") pauseDays = +e.target.value; });
+
+  $("#timer").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tact]");
+    if (!b) return;
+    var a = b.getAttribute("data-tact");
+    if (a === "pause") pauseTimer();
+    else if (a === "resume") resumeTimer();
+    else if (a === "stop") stopTimer();
+    else if (a === "validate") validateTimer();
+  });
+
+  function showTab(name) {
+    var panes = document.querySelectorAll(".pane");
+    for (var i = 0; i < panes.length; i++) panes[i].hidden = panes[i].getAttribute("data-pane") !== name;
+    var tabs = document.querySelectorAll(".tab");
+    for (var j = 0; j < tabs.length; j++) {
+      if (tabs[j].getAttribute("data-tab") === name) tabs[j].setAttribute("aria-current", "page");
+      else tabs[j].removeAttribute("aria-current");
+    }
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+  $("#tabs").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-tab]");
+    if (b) showTab(b.getAttribute("data-tab"));
+  });
+
+  $("#why").addEventListener("click", function (e) {
+    var p = e.target.closest("[data-why]");
+    if (p) { whyPick = whyPick === p.getAttribute("data-why") ? null : p.getAttribute("data-why"); renderWhy(firstKey()); return; }
+    var sv = e.target.closest("[data-whysave]");
+    if (sv && whyPick) {
+      var k = sv.getAttribute("data-whysave");
+      var o = { r: whyPick };
+      if (whyNote.trim()) o.n = whyNote.trim().slice(0, 200);
+      state.why[k] = o;
+      var reply = WHY_REPLY[whyPick];
+      whyPick = null; whyNote = "";
+      persist();
+      toast(reply);
+      return;
+    }
+    var sk = e.target.closest("[data-whyskip]");
+    if (sk) { state.why[sk.getAttribute("data-whyskip")] = { s: 1 }; whyPick = null; whyNote = ""; persist(); }
+  });
+  $("#why").addEventListener("input", function (e) { if (e.target.id === "why-note") whyNote = e.target.value; });
+
+  $("#rewards").addEventListener("click", function (e) {
+    var c = e.target.closest("[data-rwclaim]");
+    if (c) {
+      var r = state.rewards.filter(function (x) { return x.id === c.getAttribute("data-rwclaim"); })[0];
+      if (r) { r.claimed = !r.claimed; persist(); if (r.claimed) toast("Profites-en, tu l’as gagné."); }
+      return;
+    }
+    var d = e.target.closest("[data-rwdel]");
+    if (d) {
+      var id = d.getAttribute("data-rwdel");
+      if (confirmRw === id) { state.rewards = state.rewards.filter(function (x) { return x.id !== id; }); confirmRw = null; persist(); }
+      else { confirmRw = id; renderRewards(); }
+    }
+  });
+
+  $("#reward-form").addEventListener("submit", function (e) {
+    e.preventDefault();
+    var text = $("#rw-text").value.trim();
+    if (!text) return;
+    var lv = parseInt($("#rw-level").value, 10);
+    if (!(lv >= 2)) lv = levelOf(totalXP()) + 1;
+    lv = Math.min(99, lv);
+    state.rewards.push({ id: "r" + Date.now().toString(36) + Math.random().toString(36).slice(2, 5), text: text.slice(0, 80), level: lv, claimed: false });
+    $("#rw-text").value = ""; $("#rw-level").value = "";
+    persist();
+    toast("Récompense ajoutée. Maintenant, va la chercher.");
+  });
+
+  $("#goal-range").addEventListener("input", function () { renderSettings(+this.value); });
+  $("#goal-range").addEventListener("change", function () { setGoal(+this.value); });
+
+  $("#rest").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-rest]");
+    if (!b) return;
+    if (b.getAttribute("data-rest") === "take") takeRest(); else cancelRest();
   });
 
   $("#edit-toggle").addEventListener("click", function () {
@@ -456,29 +1675,69 @@
     renderList();
   });
 
+  $("#new-days").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-nday]");
+    if (!b) return;
+    var wd = +b.getAttribute("data-nday");
+    var i = newDays.indexOf(wd);
+    if (i >= 0) { if (newDays.length > 1) newDays.splice(i, 1); } else newDays.push(wd);
+    renderNewDays();
+  });
+
   $("#editor").addEventListener("submit", function (e) {
     e.preventDefault();
     var input = $("#quest-name");
     var name = input.value.trim();
     if (!name) return;
-    addQuest(name, +$("#quest-xp").value);
+    addQuest(name, +$("#quest-xp").value, parseInt($("#quest-timer").value, 10), newDays);
     input.value = "";
+    $("#quest-timer").value = "";
+    newDays = [0, 1, 2, 3, 4, 5, 6];
+    renderNewDays();
     input.focus();
   });
 
+  $("#month-prev").addEventListener("click", function () {
+    viewMonth = viewMonth.m === 0 ? { y: viewMonth.y - 1, m: 11 } : { y: viewMonth.y, m: viewMonth.m - 1 };
+    renderHistory(firstKey());
+  });
+  $("#month-next").addEventListener("click", function () {
+    viewMonth = viewMonth.m === 11 ? { y: viewMonth.y + 1, m: 0 } : { y: viewMonth.y, m: viewMonth.m + 1 };
+    renderHistory(firstKey());
+  });
+
+  $("#export-btn").addEventListener("click", exportData);
+  $("#import-btn").addEventListener("click", importData);
+  $("#backup-text").addEventListener("input", function () { importArmed = false; $("#import-btn").textContent = "Restaurer"; });
+
   function rollover() {
     var k = key(new Date());
-    if (k !== today) { today = k; compact(state); }
+    if (k !== today) {
+      today = k;
+      compact(state);
+      var c = parseKey(today);
+      viewMonth = { y: c.getFullYear(), m: c.getMonth() };
+    }
+    ensureToday();
     render();
+    if (timer && !timer.paused && !timer.fin) lockScreen();
   }
+  setInterval(tick, 1000);
   setInterval(rollover, 60000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) rollover(); });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { rollover(); tick(); } });
 
   /* Boot */
   var raw = null;
   try { raw = JSON.parse(localStorage.getItem(LS) || "null"); } catch (e) {}
   state = normalize(raw);
+  ensureToday();
+  checkAchievements(true);
+  loadTimer();
+  renderNewDays();
   render();
+  var welcomed = null;
+  try { welcomed = localStorage.getItem(LS_WELCOME); } catch (e) {}
+  if (!welcomed) openWelcome();
 
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
   if ("serviceWorker" in navigator) {
